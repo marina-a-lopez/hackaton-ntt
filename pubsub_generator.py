@@ -10,8 +10,8 @@ PROJECT_ID = "sunny-studio-484813-q7"
 COMMAND_TOPIC = "game-commands"
 
 # Player configuration
-PLAYER_ID = "AISHA_PAU"
-PLAYER_NAME = "AISHA_PAU"
+PLAYER_ID = "PubSubers"
+PLAYER_NAME = "PubSubers"
 
 # Key mappings
 KEY_TO_DIRECTION = {

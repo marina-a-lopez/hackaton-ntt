@@ -9,8 +9,8 @@ PROJECT_ID = "sunny-studio-484813-q7"
 COMMAND_TOPIC = "game-commands"
 
 # Player configuration
-PLAYER_ID = "PAU_AISHA"
-PLAYER_NAME = "PAU_AISHA"
+PLAYER_ID = "PubSubers"
+PLAYER_NAME = "PubSubers"
 
 # Direction opposites - cannot move in opposite direction
 OPPOSITES = {

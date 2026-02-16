@@ -1,6 +1,7 @@
 import json
-import time
-import random
+import sys
+import tty
+import termios
 import uuid
 from google.cloud import pubsub_v1
 
@@ -9,8 +10,16 @@ PROJECT_ID = "sunny-studio-484813-q7"
 COMMAND_TOPIC = "game-commands"
 
 # Player configuration
-PLAYER_ID = str(uuid.uuid4())
-PLAYER_NAME = "Player_" + PLAYER_ID[:8]
+PLAYER_ID = "AISHA_PAU"
+PLAYER_NAME = "AISHA_PAU"
+
+# Key mappings
+KEY_TO_DIRECTION = {
+    "w": "UP",
+    "a": "LEFT",
+    "s": "DOWN",
+    "d": "RIGHT"
+}
 
 # Direction opposites - cannot move in opposite direction
 OPPOSITES = {
@@ -20,16 +29,24 @@ OPPOSITES = {
     "RIGHT": "LEFT"
 }
 
-DIRECTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
+
+def getch():
+    """Read a single character from stdin without waiting for Enter."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
 
 
-def get_valid_directions(last_direction):
-    """Returns valid directions based on the last move."""
+def is_valid_move(direction, last_direction):
+    """Check if the move is valid (not opposite of last move)."""
     if last_direction is None:
-        return DIRECTIONS
-    
-    opposite = OPPOSITES.get(last_direction)
-    return [d for d in DIRECTIONS if d != opposite]
+        return True
+    return direction != OPPOSITES.get(last_direction)
 
 
 def create_join_message():
@@ -67,6 +84,8 @@ def main():
     print(f"Player ID: {PLAYER_ID}")
     print(f"Publishing to topic: {topic_path}")
     print("-" * 50)
+    print("Controls: W=UP, A=LEFT, S=DOWN, D=RIGHT, Q=QUIT")
+    print("-" * 50)
     
     # Send join message
     join_msg = create_join_message()
@@ -77,13 +96,23 @@ def main():
     
     try:
         while True:
-            time.sleep(3)
+            key = getch().lower()
             
-            # Get valid directions based on last move
-            valid_directions = get_valid_directions(last_direction)
+            # Quit on 'q' or Ctrl+C
+            if key == 'q' or key == '\x03':
+                break
             
-            # Pick a random valid direction
-            direction = random.choice(valid_directions)
+            # Check if key is a valid direction key
+            if key not in KEY_TO_DIRECTION:
+                continue
+            
+            direction = KEY_TO_DIRECTION[key]
+            
+            # Check if move is valid (not opposite of last)
+            if not is_valid_move(direction, last_direction):
+                print(f"Invalid move: cannot go {direction} after {last_direction}")
+                continue
+            
             last_direction = direction
             
             # Create and send move message
@@ -91,7 +120,9 @@ def main():
             publish_message(publisher, topic_path, move_msg)
             
     except KeyboardInterrupt:
-        print("\nStopping generator...")
+        pass
+    
+    print("\nStopping generator...")
 
 
 if __name__ == "__main__":
